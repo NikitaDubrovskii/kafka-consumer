@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  zookeeper:
+    image: wurstmeister/zookeeper:latest
+    networks:
+      - my-network
+
+  kafka:
+    image: wurstmeister/kafka:2.13-2.8.1
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - my-network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    depends_on:
+      - kafka
+    networks:
+      - my-network
+
+networks:
+  my-network:
+    name: my-network
+    driver: bridge
